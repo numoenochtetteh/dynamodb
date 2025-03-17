@@ -1,0 +1,46 @@
+import boto3
+import csv
+
+# Initialize DynamoDB resource (update the region as needed)
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+
+def batch_write(table_name, rows):
+    """
+    Writes data in batches to a DynamoDB table.
+    """
+    table = dynamodb.Table(table_name)
+
+    with table.batch_writer() as batch:
+        for row in rows:
+            batch.put_item(Item=row)
+
+    return True
+
+def read_csv(csv_file):
+    """
+    Reads a CSV file and returns a list of dictionaries.
+    """
+    items = []
+    with open(csv_file, encoding="utf-8") as file:
+        rows = csv.DictReader(file)
+        for row in rows:
+            items.append(row)
+    
+    return items
+
+if __name__ == '__main__':
+    # Define table name and CSV file
+    table_name = 'EXRATESCC2018'  # Ensure no leading/trailing spaces
+    file_name = 'EXRATESCC2018.csv'
+
+    # Read CSV data
+    items = read_csv(file_name)
+
+    # Write data to DynamoDB
+    status = batch_write(table_name, items)
+
+    # Print the result
+    if status:
+        print('Data has been successfully saved to DynamoDB.')
+    else:
+        print('Error while loading data...')
